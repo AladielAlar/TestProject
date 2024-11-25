@@ -7,124 +7,116 @@ using OpenQA.Selenium.Support.UI;
 
 namespace WebTests
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class Tests
     {
-        private ChromeDriver? driver;
+        private static readonly ThreadLocal<ChromeDriver> driver = new(() => new ChromeDriver()); // here i a bit rebuild code because if we create driver in SetUp there we have a problem with running each test in parallel
 
         [SetUp]
 
         public void SetUp()
         {
-            ChromeOptions chromeOptions = new();
-
-            driver = new ChromeDriver(chromeOptions);
-            driver.Manage().Window.Maximize();
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+            driver.Value.Manage().Window.Maximize();
         }
 
-        [Test] // First
-
-        public void NavigationTest()
+        [Test , Parallelizable(ParallelScope.Children)]
+        [TestCase("https://en.ehu.lt/", "About", "https://en.ehu.lt/about/", "About")]
+        [Category("Navigation")]
+        public void NavigationTest(string baseUrl, string linkText, string expectedUrl, string expectedTitle)
         {
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
-            driver.Navigate().GoToUrl("https://en.ehu.lt/");
+            driver.Value.Navigate().GoToUrl(baseUrl);
 
-            IWebElement aboutLink = driver.FindElement(By.LinkText("About")); // Here according task must be "About EHU" , but on todays site we have only "About" , so i change it .
-            if (aboutLink == null)
+            IWebElement link = driver.Value.FindElement(By.LinkText(linkText)) ?? throw new Exception($"The link '{linkText}' was not found.");
+            link.Click();
+
+            string currentUrl = driver.Value.Url;
+            if (currentUrl != expectedUrl)
             {
-                Assert.Fail("The 'About' link was not found.");
+                throw new Exception($"Expected URL: {expectedUrl}, but got: {currentUrl}");
             }
 
-            Thread.Sleep(2000);
-            aboutLink.Click();
-
-            string currentUrl = driver.Url;
-            if (currentUrl != "https://en.ehu.lt/about/")
+            string pageTitle = driver.Value.Title;
+            if (pageTitle != expectedTitle)
             {
-                Assert.Fail($"Expected URL: https://en.ehu.lt/about/, but got: {currentUrl}");
-            }
-
-            string pageTitle = driver.Title;
-            if (pageTitle != "About") // Here according task must be "About EHU" , but on todays site we have only "About" , so i change it .
-            {
-                Assert.Fail($"Expected 'About', but got: {pageTitle}");
-            }
-
-            IWebElement header = driver.FindElement(By.TagName("h1"));
-            if (header == null || header.Text != "About") // Here according task must be "About European Humanities University" , but on todays site we again have only "About" , so i change it .
-            {
-                Assert.Fail($"The header content does not match the expected value. We got {header.Text}");
+                throw new Exception($"Expected title: {expectedTitle}, but got: {pageTitle}");
             }
         }
 
-        [Test] // Second 
+        [Test, Parallelizable(ParallelScope.Children)]
+        [TestCase("https://en.ehu.lt/", "study programs", "https://en.ehu.lt/?s=study+programs")]
+        [Category("Search")] // Second 
 
-        public void SearchTest()
+        public void SearchTest(string baseUrl , string query, string expectedUrl)
         {
-            driver.Navigate().GoToUrl("https://en.ehu.lt/");
+            driver.Value.Navigate().GoToUrl(baseUrl);
 
-            IWebElement headerSearch = driver.FindElement(By.ClassName("header-search"));
+            IWebElement headerSearch = driver.Value.FindElement(By.ClassName("header-search"));
 
-            Actions actions = new Actions(driver);
+            Actions actions = new(driver.Value);
             actions.MoveToElement(headerSearch).Perform();
 
-            IWebElement searchBar = driver.FindElement(By.ClassName("header-search__form"));
-            searchBar.Click();
-            Actions l = new Actions(driver); 
-            actions.SendKeys("study programs").Build().Perform();
+            IWebElement searchBar = driver.Value.FindElement(By.ClassName("header-search__form"));
+            searchBar.Click(); 
+            actions.SendKeys(query).Build().Perform();
 
-            Thread.Sleep(2000);
-            IWebElement sendButton = driver.FindElement(By.CssSelector("button[type='submit']"));
+            IWebElement sendButton = driver.Value.FindElement(By.CssSelector("button[type='submit']"));
             sendButton.Click();
 
-            string currentUrl = driver.Url;
-            if (currentUrl != "https://en.ehu.lt/?s=study+programs")
+            string currentUrl = driver.Value.Url;
+            if (currentUrl != expectedUrl)
             {
-                Assert.Fail($"Expected URL: https://en.ehu.lt/?s=study+programs, but got: {currentUrl}");
+                Assert.Fail($"Expected URL: {expectedUrl}, but got: {currentUrl}");
             }
         }
 
-        [Test] // Third
-        public void LanguageTest()
+        [Test, Parallelizable(ParallelScope.Children)]
+        [TestCase("https://en.ehu.lt/", "LT", "lt.ehu.lt", "Apie mus")]
+        [TestCase("https://en.ehu.lt/", "EN", "en.ehu.lt", "About")] // i also add English language check 
+        [Category("Localization")] // Third
+        public void LanguageTest(string baseUrl , string language, string expectedUrlFragment, string expectedHeader)
         {
-            driver.Navigate().GoToUrl("https://en.ehu.lt/");
+            driver.Value.Navigate().GoToUrl(baseUrl);
 
-            IWebElement languageSwitcher = driver.FindElement(By.ClassName("language-switcher"));
-            Actions actions = new Actions(driver);
+            IWebElement languageSwitcher = driver.Value.FindElement(By.ClassName("language-switcher"));
+            Actions actions = new(driver.Value);
             actions.MoveToElement(languageSwitcher).Perform();
 
-            IWebElement LT = driver.FindElement(By.LinkText("LT"));
-            LT.Click();
+            IWebElement lang = driver.Value.FindElement(By.LinkText(language));
+            lang.Click();
 
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            wait.Until(driver => driver.Url.Contains("lt.ehu.lt"));
+            WebDriverWait wait = new(driver.Value, TimeSpan.FromSeconds(2));
+            wait.Until(driver => driver.Url.Contains(expectedUrlFragment));
 
-            string pageTitle = driver.FindElement(By.TagName("h2")).Text;
-            if (pageTitle != "Apie mus")
+            string pageTitle = driver.Value.FindElement(By.TagName("h2")).Text;
+            if (pageTitle != expectedHeader)
             {
-                Assert.Fail($"Expected 'Apie mus', but got: {pageTitle}");
+                Assert.Fail($"Expected {expectedHeader}, but got: {pageTitle}");
             }
         }
 
-        [Test] // fourth
-        public void ContactFormTest() // honestly i don't find such form on site so this test is failed
+        [Test , Ignore("We cannot run it, it is just an example of test with form")] // fourth
+        [TestCase("https://en.ehu.lt/contact/", "name", "email", "message", "button[type='submit']", ".success-message")]
+        [Category("ContactForm")]
+        public void ContactFormTest(string baseUrl, string nameField, string emailField, string messageField, string button, string resultMessage)
         {
-            driver.Navigate().GoToUrl("https://en.ehu.lt/contact/");
+            driver.Value.Navigate().GoToUrl(baseUrl);
 
-            IWebElement nameField = driver.FindElement(By.Name("name"));
-            nameField.SendKeys("Test User");
+            IWebElement name = driver.Value.FindElement(By.Name(nameField));
+            name.SendKeys("Test User");
 
-            IWebElement emailField = driver.FindElement(By.Name("email"));
-            emailField.SendKeys("testuser@example.com");
+            IWebElement email = driver.Value.FindElement(By.Name(emailField));
+            email.SendKeys("testuser@example.com");
 
-            IWebElement messageField = driver.FindElement(By.Name("message"));
-            messageField.SendKeys("This is a test message for verification purposes.");
+            IWebElement message = driver.Value.FindElement(By.Name(messageField));
+            message.SendKeys("This is a test message for verification purposes.");
 
-            IWebElement sendButton = driver.FindElement(By.CssSelector("button[type='submit']"));
+            IWebElement sendButton = driver.Value.FindElement(By.CssSelector(button));
             sendButton.Click();
 
-            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            IWebElement successMessage = wait.Until(driver => driver.FindElement(By.CssSelector(".success-message")));
+            WebDriverWait wait = new(driver.Value, TimeSpan.FromSeconds(10));
+            IWebElement successMessage = wait.Until(driver => driver.FindElement(By.CssSelector(resultMessage)));
 
             if (successMessage.Displayed)
             {
@@ -148,7 +140,7 @@ namespace WebTests
         public void TearDown()
         {
             Console.WriteLine("Selenium webdriver quit");
-            driver.Quit();
+            driver.Value.Quit();
         }
     }
 }
