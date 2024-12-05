@@ -19,10 +19,11 @@ namespace TestProject_xUnit_
             driver.Manage().Window.Maximize();
         }
 
-        [Theory]
-        [InlineData("https://en.ehu.lt/", "About", "https://en.ehu.lt/about/", "About")]
-        public void NavigationTest(string baseUrl, string linkText, string expectedUrl, string expectedTitle)
+        [Fact , Trait("Category", "Navigation")]
+        public void NavigationTest()
         {
+            var (baseUrl, linkText, expectedUrl, expectedTitle) = TestDataFactory.NavigationTestData();
+
             var basePage = new BasePage(driver);
             var aboutPage = new AboutPage(driver);
 
@@ -41,30 +42,33 @@ namespace TestProject_xUnit_
         [Fact ,Trait("Category", "Search")] // Category
         public void SearchTest()
         {
+            var (baseUrl, searchQuery, expectedUrl) = TestDataFactory.SearchTestData();
             var basePage = new BasePage(driver);
             var studyProgramPage = new StudyProgramPage(driver);
 
-            basePage.NavigateTo("https://en.ehu.lt/");
-            studyProgramPage.SearchStudyPrograms("study programs");
+            basePage.NavigateTo(baseUrl);
+            studyProgramPage.SearchStudyPrograms(searchQuery);
 
             string currentUrl = studyProgramPage.GetCurrentUrl();
-            Assert.Equal("https://en.ehu.lt/?s=study+programs", currentUrl);
+            Assert.Equal(expectedUrl, currentUrl);
         }
 
         [Fact, Trait("Category", "Localization")] // Category
         public void LanguageTest()
         {
+            var (baseUrl, language, expectedUrlFragment, expectedHeader) = TestDataFactory.LanguageTestData();
+
             var basePage = new BasePage(driver);
             var languagePage = new LanguagePage(driver);
 
-            basePage.NavigateTo("https://en.ehu.lt/");
-            languagePage.SwitchToEnglish();
+            basePage.NavigateTo(baseUrl);
+            languagePage.SwitchTolithuanian();
 
-            WebDriverWait wait = new(driver, TimeSpan.FromSeconds(10));
-            wait.Until(driver => driver.Url.Contains("en.ehu.lt"));
+            WebDriverWait wait = new(driver, TimeSpan.FromSeconds(2));
+            wait.Until(driver => driver.Url.Contains(expectedUrlFragment));
 
             string pageTitle = driver.FindElement(By.TagName("h2")).Text;
-            Assert.Equal("About", pageTitle);
+            Assert.Equal(expectedHeader, pageTitle);
         }
 
 #pragma warning disable xUnit1004 // Test methods should not be skipped
@@ -72,21 +76,22 @@ namespace TestProject_xUnit_
 #pragma warning restore xUnit1004 // Test methods should not be skipped
         public void ContactFormTest()
         {
+            var (baseUrl, name, email, message, expectedMessage) = TestDataFactory.ContactFormTestData();
             var basePage = new BasePage(driver);
-            basePage.NavigateTo("https://en.ehu.lt/contact/");
+            basePage.NavigateTo(baseUrl);
 
             var contactFormBuilder = new ContactFormBuilder(driver)
-                .SetName("Test User")
-                .SetEmail("testuser@example.com")
-                .SetMessage("This is a test message.");
+                .SetName(name)
+                .SetEmail(email)
+                .SetMessage(message);
 
             contactFormBuilder.Submit();
 
-            WebDriverWait wait = new(driver, TimeSpan.FromSeconds(10));
+            WebDriverWait wait = new(driver, TimeSpan.FromSeconds(2));
             IWebElement successMessage = wait.Until(driver => driver.FindElement(By.CssSelector(".success-message")));
 
             Assert.True(successMessage.Displayed);
-            Assert.Contains("Thank you for your message. It has been sent.", successMessage.Text);
+            Assert.Contains(expectedMessage, successMessage.Text);
         }
 
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize

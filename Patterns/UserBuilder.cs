@@ -14,6 +14,7 @@ namespace Patterns
         {
             private readonly IWebDriver Driver;
             private readonly IWebElement nameField;
+#pragma warning disable CS0649 // Field 'ContactFormBuilder.emailField' is never assigned to, and will always have its default value null
             private readonly IWebElement emailField;
             private readonly IWebElement messageField;
             private readonly IWebElement submitButton;

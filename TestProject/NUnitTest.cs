@@ -25,12 +25,13 @@ namespace WebTests
             driver.Value.Manage().Window.Maximize();
         }
 
-        [Test, Parallelizable(ParallelScope.Children)]
-        [TestCase("https://en.ehu.lt/", "About", "https://en.ehu.lt/about/", "About")]
+        [Test, Parallelizable(ParallelScope.Self)]
         [Category("Navigation")]
-        public void NavigationTest(string baseUrl, string linkText, string expectedUrl, string expectedTitle)
+        public void NavigationTest()
         {
 #pragma warning disable CS8604 // Possible null reference argument.
+            var (baseUrl, linkText, expectedUrl, expectedTitle) = TestDataFactory.NavigationTestData();
+
             var basePage = new BasePage(driver.Value);
             var aboutPage = new AboutPage(driver.Value);
 
@@ -58,17 +59,17 @@ namespace WebTests
             }
         }
 
-        [Test, Parallelizable(ParallelScope.Children)]
-        [TestCase("https://en.ehu.lt/", "study programs", "https://en.ehu.lt/?s=study+programs")]
+        [Test, Parallelizable(ParallelScope.Self)]
         [Category("Search")] // Second 
 
-        public void SearchTest(string baseUrl , string query, string expectedUrl)
+        public void SearchTest()
         {
+            var (baseUrl, searchQuery, expectedUrl) = TestDataFactory.SearchTestData();
             var basePage = new BasePage(driver.Value);
             var studyProgramPage = new StudyProgramPage(driver.Value);
 
             basePage.NavigateTo(baseUrl);
-            studyProgramPage.SearchStudyPrograms(query);
+            studyProgramPage.SearchStudyPrograms(searchQuery);
 
             string currentUrl = studyProgramPage.GetCurrentUrl();
 
@@ -78,15 +79,15 @@ namespace WebTests
             }
         }
 
-        [Test, Parallelizable(ParallelScope.Children)]
-        [TestCase("https://en.ehu.lt/", "en.ehu.lt", "About")] 
+        [Test, Parallelizable(ParallelScope.Self)]
         [Category("Localization")] // Third
-        public void LanguageTest(string baseUrl , string expectedUrlFragment, string expectedHeader)
-        { 
+        public void LanguageTest()
+        {
+            var (baseUrl, language, expectedUrlFragment, expectedHeader) = TestDataFactory.LanguageTestData();
             var basePage = new BasePage(driver.Value);
             var languagePage = new LanguagePage(driver.Value);
             basePage.NavigateTo(baseUrl);
-            languagePage.SwitchToEnglish();
+            languagePage.SwitchTolithuanian();
 
             WebDriverWait wait = new(driver.Value, TimeSpan.FromSeconds(2));
             wait.Until(driver => driver.Url.Contains(expectedUrlFragment));
@@ -100,17 +101,17 @@ namespace WebTests
         }
 
         [Test , Ignore("We cannot run it, it is just an example of test with form")] // fourth
-        [TestCase("https://en.ehu.lt/contact/", "name", "email", "message", "button[type='submit']", ".success-message")]
         [Category("ContactForm")]
-        public void ContactFormTest(string baseUrl, string nameField, string emailField, string messageField, string button, string resultMessage)
+        public void ContactFormTest()
         {
+            var (baseUrl, name, email, message, expectedMessage) = TestDataFactory.ContactFormTestData();
             var basePage = new BasePage(driver.Value);
             basePage.NavigateTo(baseUrl);
 
             var contactFormBuilder = new ContactFormBuilder(driver.Value)
-                .SetName(nameField)
-                .SetEmail(emailField)
-                .SetMessage(messageField);
+                .SetName(name)
+                .SetEmail(email)
+                .SetMessage(message);
 
             contactFormBuilder.Submit();
 
@@ -124,8 +125,6 @@ namespace WebTests
             {
                 Assert.Fail("Test Failed: message is not displayed.");
             }
-
-            string expectedMessage = "Thank you for your message. It has been sent.";
             if (successMessage.Text.Contains(expectedMessage))
             {
             }

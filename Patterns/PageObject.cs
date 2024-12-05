@@ -64,13 +64,13 @@ namespace Patterns
     public class LanguagePage : BasePage
     {
         public LanguagePage(IWebDriver driver) : base(driver) { }
-        public void SwitchToEnglish()
+        public void SwitchTolithuanian()
         {
             IWebElement languageSwitcher = driver.FindElement(By.ClassName("language-switcher"));
             Actions actions = new(driver);
             actions.MoveToElement(languageSwitcher).Perform();
 
-            IWebElement lang = driver.FindElement(By.LinkText("EN"));
+            IWebElement lang = driver.FindElement(By.LinkText("LT"));
             lang.Click();
         }
     }
