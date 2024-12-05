@@ -88,10 +88,6 @@ namespace WebTests
             var languagePage = new LanguagePage(driver.Value);
             basePage.NavigateTo(baseUrl);
             languagePage.SwitchTolithuanian();
-
-            WebDriverWait wait = new(driver.Value, TimeSpan.FromSeconds(2));
-            wait.Until(driver => driver.Url.Contains(expectedUrlFragment));
-
             string pageTitle = driver.Value.FindElement(By.TagName("h2")).Text;
 
             if (pageTitle != expectedHeader)

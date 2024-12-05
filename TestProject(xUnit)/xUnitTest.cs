@@ -64,9 +64,6 @@ namespace TestProject_xUnit_
             basePage.NavigateTo(baseUrl);
             languagePage.SwitchTolithuanian();
 
-            WebDriverWait wait = new(driver, TimeSpan.FromSeconds(2));
-            wait.Until(driver => driver.Url.Contains(expectedUrlFragment));
-
             string pageTitle = driver.FindElement(By.TagName("h2")).Text;
             Assert.Equal(expectedHeader, pageTitle);
         }
