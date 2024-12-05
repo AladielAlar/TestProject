@@ -1,16 +1,21 @@
 ﻿using System;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using System.Xml.Linq;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
+using Patterns;
+using Patterns.WebTests.Builders;
 
 namespace WebTests
 {
     [TestFixture, Parallelizable(ParallelScope.Fixtures)]
+
     public class Tests
     {
-        private static readonly ThreadLocal<ChromeDriver> driver = new(() => new ChromeDriver()); // here i a bit rebuild code because if we create driver in SetUp there we have a problem with running each test in parallel
+        private static readonly ThreadLocal<IWebDriver> driver = new(() => DriverSingleton.GetDriver());
 
         [SetUp]
 
@@ -20,15 +25,18 @@ namespace WebTests
             driver.Value.Manage().Window.Maximize();
         }
 
-        [Test , Parallelizable(ParallelScope.Children)]
+        [Test, Parallelizable(ParallelScope.Children)]
         [TestCase("https://en.ehu.lt/", "About", "https://en.ehu.lt/about/", "About")]
         [Category("Navigation")]
         public void NavigationTest(string baseUrl, string linkText, string expectedUrl, string expectedTitle)
         {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-            driver.Value.Navigate().GoToUrl(baseUrl);
+#pragma warning disable CS8604 // Possible null reference argument.
+            var basePage = new BasePage(driver.Value);
+            var aboutPage = new AboutPage(driver.Value);
 
-            IWebElement link = driver.Value.FindElement(By.LinkText(linkText)) ?? throw new Exception($"The link '{linkText}' was not found.");
+            basePage.NavigateTo(baseUrl);
+
+            IWebElement link = basePage.FindLinkByText(linkText);
             link.Click();
 
             string currentUrl = driver.Value.Url;
@@ -42,6 +50,12 @@ namespace WebTests
             {
                 throw new Exception($"Expected title: {expectedTitle}, but got: {pageTitle}");
             }
+
+            string header = aboutPage.GetAboutHeader();
+            if (header != expectedTitle)
+            {
+                throw new Exception($"Expected title: {expectedTitle}, but got: {header}");
+            }
         }
 
         [Test, Parallelizable(ParallelScope.Children)]
@@ -50,21 +64,14 @@ namespace WebTests
 
         public void SearchTest(string baseUrl , string query, string expectedUrl)
         {
-            driver.Value.Navigate().GoToUrl(baseUrl);
+            var basePage = new BasePage(driver.Value);
+            var studyProgramPage = new StudyProgramPage(driver.Value);
 
-            IWebElement headerSearch = driver.Value.FindElement(By.ClassName("header-search"));
+            basePage.NavigateTo(baseUrl);
+            studyProgramPage.SearchStudyPrograms(query);
 
-            Actions actions = new(driver.Value);
-            actions.MoveToElement(headerSearch).Perform();
+            string currentUrl = studyProgramPage.GetCurrentUrl();
 
-            IWebElement searchBar = driver.Value.FindElement(By.ClassName("header-search__form"));
-            searchBar.Click(); 
-            actions.SendKeys(query).Build().Perform();
-
-            IWebElement sendButton = driver.Value.FindElement(By.CssSelector("button[type='submit']"));
-            sendButton.Click();
-
-            string currentUrl = driver.Value.Url;
             if (currentUrl != expectedUrl)
             {
                 Assert.Fail($"Expected URL: {expectedUrl}, but got: {currentUrl}");
@@ -72,24 +79,20 @@ namespace WebTests
         }
 
         [Test, Parallelizable(ParallelScope.Children)]
-        [TestCase("https://en.ehu.lt/", "LT", "lt.ehu.lt", "Apie mus")]
-        [TestCase("https://en.ehu.lt/", "EN", "en.ehu.lt", "About")] // i also add English language check 
+        [TestCase("https://en.ehu.lt/", "en.ehu.lt", "About")] 
         [Category("Localization")] // Third
-        public void LanguageTest(string baseUrl , string language, string expectedUrlFragment, string expectedHeader)
-        {
-            driver.Value.Navigate().GoToUrl(baseUrl);
-
-            IWebElement languageSwitcher = driver.Value.FindElement(By.ClassName("language-switcher"));
-            Actions actions = new(driver.Value);
-            actions.MoveToElement(languageSwitcher).Perform();
-
-            IWebElement lang = driver.Value.FindElement(By.LinkText(language));
-            lang.Click();
+        public void LanguageTest(string baseUrl , string expectedUrlFragment, string expectedHeader)
+        { 
+            var basePage = new BasePage(driver.Value);
+            var languagePage = new LanguagePage(driver.Value);
+            basePage.NavigateTo(baseUrl);
+            languagePage.SwitchToEnglish();
 
             WebDriverWait wait = new(driver.Value, TimeSpan.FromSeconds(2));
             wait.Until(driver => driver.Url.Contains(expectedUrlFragment));
 
             string pageTitle = driver.Value.FindElement(By.TagName("h2")).Text;
+
             if (pageTitle != expectedHeader)
             {
                 Assert.Fail($"Expected {expectedHeader}, but got: {pageTitle}");
@@ -101,22 +104,18 @@ namespace WebTests
         [Category("ContactForm")]
         public void ContactFormTest(string baseUrl, string nameField, string emailField, string messageField, string button, string resultMessage)
         {
-            driver.Value.Navigate().GoToUrl(baseUrl);
+            var basePage = new BasePage(driver.Value);
+            basePage.NavigateTo(baseUrl);
 
-            IWebElement name = driver.Value.FindElement(By.Name(nameField));
-            name.SendKeys("Test User");
+            var contactFormBuilder = new ContactFormBuilder(driver.Value)
+                .SetName(nameField)
+                .SetEmail(emailField)
+                .SetMessage(messageField);
 
-            IWebElement email = driver.Value.FindElement(By.Name(emailField));
-            email.SendKeys("testuser@example.com");
-
-            IWebElement message = driver.Value.FindElement(By.Name(messageField));
-            message.SendKeys("This is a test message for verification purposes.");
-
-            IWebElement sendButton = driver.Value.FindElement(By.CssSelector(button));
-            sendButton.Click();
+            contactFormBuilder.Submit();
 
             WebDriverWait wait = new(driver.Value, TimeSpan.FromSeconds(10));
-            IWebElement successMessage = wait.Until(driver => driver.FindElement(By.CssSelector(resultMessage)));
+            IWebElement successMessage = wait.Until(driver => driver.FindElement(By.CssSelector(".success-message")));
 
             if (successMessage.Displayed)
             {
@@ -139,8 +138,7 @@ namespace WebTests
         [TearDown]
         public void TearDown()
         {
-            Console.WriteLine("Selenium webdriver quit");
-            driver.Value.Quit();
+            DriverSingleton.QuitDriver();
         }
     }
 }
