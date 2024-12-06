@@ -20,10 +20,17 @@ namespace WebTests
         public void SetupLogging()
         {
             Directory.CreateDirectory("NUnitlogs");
+            string logFilePath = "NUnitlogs/tests.log";
+
+            if (File.Exists(logFilePath))
+            {
+                File.Delete(logFilePath);
+            }
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File("NUnitlogs/tests.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7, shared: true, fileSizeLimitBytes: 10485760)
+                .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         }
 

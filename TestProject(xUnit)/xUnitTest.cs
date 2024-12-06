@@ -4,6 +4,8 @@ using Patterns;
 using Patterns.WebTests.Builders;
 using FluentAssertions;
 using Serilog;
+using Xunit.Abstractions;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 
 namespace TestProject_xUnit_
 {
@@ -11,13 +13,24 @@ namespace TestProject_xUnit_
     public class Tests : IDisposable
     {
         private readonly IWebDriver driver;
-        public Tests()
+        private readonly ITestOutputHelper output;
+
+        public Tests(ITestOutputHelper output)
         {
+            this.output = output;
             Directory.CreateDirectory("xUnitlogs");
+            string logFilePath = "xUnitlogs/tests.log";
+
+            if (File.Exists(logFilePath))
+            {
+                File.Delete(logFilePath);
+            }
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File("xUnitlogs/tests.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7, shared: true, fileSizeLimitBytes: 10485760)
+                .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
+                .WriteTo.TestOutput(output)
                 .CreateLogger();
 
             driver = DriverSingleton.GetDriver();
@@ -57,7 +70,9 @@ namespace TestProject_xUnit_
         [Fact ,Trait("Category", "Search")] // Category
         public void SearchTest()
         {
-            Log.Debug("SearchTest initialized.");
+            Log.Information("Test started.");
+            output.WriteLine("This is a direct xUnit log message.");
+            Assert.True(true);
             try
             {
                 var (baseUrl, searchQuery, expectedUrl) = TestDataFactory.SearchTestData();
