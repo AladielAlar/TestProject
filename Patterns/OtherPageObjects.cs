@@ -7,19 +7,16 @@ using OpenQA.Selenium.Interactions;
 
 namespace Patterns
 {
-    public class AboutPage : BasePage
+    public class AboutPage(IWebDriver driver) : BasePage(driver)
     {
-        public AboutPage(IWebDriver driver) : base(driver) { }
-
         public string GetAboutHeader()
         {
             return driver.FindElement(By.TagName("h1")).Text;
         }
     }
 
-    public class StudyProgramPage : BasePage
+    public class StudyProgramPage(IWebDriver driver) : BasePage(driver)
     {
-        public StudyProgramPage(IWebDriver driver) : base(driver) { }
         public void SearchStudyPrograms(string query)
         {
             IWebElement headerSearch = driver.FindElement(By.ClassName("header-search"));
@@ -39,9 +36,8 @@ namespace Patterns
             return driver.Url;
         }
     }
-    public class LanguagePage : BasePage
+    public class LanguagePage(IWebDriver driver) : BasePage(driver)
     {
-        public LanguagePage(IWebDriver driver) : base(driver) { }
         public void SwitchTolithuanian()
         {
             IWebElement languageSwitcher = driver.FindElement(By.ClassName("language-switcher"));

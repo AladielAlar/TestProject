@@ -24,7 +24,9 @@ namespace Patterns
             return driverInstances.GetOrAdd(threadId, _ =>
             {
                 ChromeOptions options = new();
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
                 IWebDriver driver = new ChromeDriver(options);
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
                 driver.Manage().Window.Maximize();
                 return driver;
             });

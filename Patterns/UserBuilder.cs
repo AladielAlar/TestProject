@@ -14,7 +14,9 @@ namespace Patterns
         {
 #pragma warning disable CS0649 // Field 'ContactFormBuilder.emailField' is never assigned to, and will always have its default value null
 
+#pragma warning disable IDE0052 // Remove unread private members
             private readonly IWebDriver driver;
+#pragma warning restore IDE0052 // Remove unread private members
             private readonly IWebElement nameField;
             private readonly IWebElement emailField;
             private readonly IWebElement messageField;
