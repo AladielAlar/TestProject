@@ -13,10 +13,11 @@ namespace TestProject_xUnit_
         private readonly IWebDriver driver;
         public Tests()
         {
+            Directory.CreateDirectory("xUnitlogs");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File("logs/tests.log", rollingInterval: RollingInterval.Day)
+                .WriteTo.File("xUnitlogs/tests.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7, shared: true, fileSizeLimitBytes: 10485760)
                 .CreateLogger();
 
             driver = DriverSingleton.GetDriver();

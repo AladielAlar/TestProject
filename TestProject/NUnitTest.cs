@@ -19,10 +19,11 @@ namespace WebTests
         [OneTimeSetUp]
         public void SetupLogging()
         {
+            Directory.CreateDirectory("NUnitlogs");
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File("logs/tests.log", rollingInterval: RollingInterval.Day)
+                .WriteTo.File("NUnitlogs/tests.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7, shared: true, fileSizeLimitBytes: 10485760)
                 .CreateLogger();
         }
 
