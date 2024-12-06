@@ -12,17 +12,17 @@ namespace Patterns
     {
         public class ContactFormBuilder
         {
-            private readonly IWebDriver Driver;
-            private readonly IWebElement nameField;
 #pragma warning disable CS0649 // Field 'ContactFormBuilder.emailField' is never assigned to, and will always have its default value null
+
+            private readonly IWebDriver driver;
+            private readonly IWebElement nameField;
             private readonly IWebElement emailField;
             private readonly IWebElement messageField;
             private readonly IWebElement submitButton;
-
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
             public ContactFormBuilder(IWebDriver driver)
             {
-                Driver = driver;
+                this.driver = driver;
                 nameField = driver.FindElement(By.Name("name"));
                 nameField = driver.FindElement(By.Name("email"));
                 nameField = driver.FindElement(By.Name("message"));

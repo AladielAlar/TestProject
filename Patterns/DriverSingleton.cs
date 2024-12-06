@@ -18,6 +18,7 @@ namespace Patterns
 
         public static IWebDriver GetDriver()
         {
+#pragma warning disable CA1840 // Use 'Environment.CurrentManagedThreadId'
             int threadId = Thread.CurrentThread.ManagedThreadId;
 
             return driverInstances.GetOrAdd(threadId, _ =>
