@@ -13,9 +13,6 @@ namespace Patterns
     {
 
         private static readonly ConcurrentDictionary<int, IWebDriver> driverInstances = new();
-
-        private DriverSingleton() { }
-
         public static IWebDriver GetDriver()
         {
 #pragma warning disable CA1840 // Use 'Environment.CurrentManagedThreadId'
@@ -24,9 +21,7 @@ namespace Patterns
             return driverInstances.GetOrAdd(threadId, _ =>
             {
                 ChromeOptions options = new();
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-                IWebDriver driver = new ChromeDriver(options);
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+                var driver = new ChromeDriver(options);
                 driver.Manage().Window.Maximize();
                 return driver;
             });

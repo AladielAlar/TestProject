@@ -1,0 +1,18 @@
+{
+  "bindingCulture": {
+    "name": "en-US"
+  },
+  "language": {
+    "feature": "en-US"
+  },
+  "runtime": {
+    "dependencies": {
+      "useParallelExecution": true
+    }
+  },
+  "generator": {
+    "allowDebugGeneratedFiles": true,
+    "allowRowTests": true,
+    "generateAsyncTests": false
+  }
+}

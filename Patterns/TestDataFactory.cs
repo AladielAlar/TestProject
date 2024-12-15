@@ -18,9 +18,14 @@ namespace Patterns
             return ("https://en.ehu.lt/", "study programs", "https://en.ehu.lt/?s=study+programs");
         }
 
-        public static (string BaseUrl, string Language, string ExpectedUrlFragment, string ExpectedHeader) LanguageTestData()
+        public static (string BaseUrl, string Language, string ExpectedUrlFragment, string ExpectedHeader) LanguageTestDataLT()
         {
             return ("https://en.ehu.lt/", "LT", "lt.ehu.lt", "Apie mus");
+        }
+
+        public static (string BaseUrl, string Language, string ExpectedUrlFragment, string ExpectedHeader) LanguageTestDataEN()
+        {
+            return ("https://lt.ehu.lt/", "EN", "en.ehu.lt", "About");
         }
 
         public static (string BaseUrl, string Name, string Email, string Message, string ExpectedMessage) ContactFormTestData()

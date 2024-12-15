@@ -7,14 +7,10 @@ using System.Threading.Tasks;
 
 namespace Patterns
 {
-    public class BasePage
+    public class BasePage(IWebDriver driver)
     {
-        protected readonly IWebDriver driver;
+        protected readonly IWebDriver driver = driver;
 
-        public BasePage(IWebDriver driver)
-        {
-            this.driver = driver;
-        }
         public void NavigateTo(string url)
         {
             driver.Navigate().GoToUrl(url);

@@ -11,6 +11,8 @@ namespace Patterns
     {
         public string GetAboutHeader()
         {
+            IWebElement link = driver.FindElement(By.LinkText("About"));
+            link.Click();
             return driver.FindElement(By.TagName("h1")).Text;
         }
     }
@@ -36,7 +38,7 @@ namespace Patterns
             return driver.Url;
         }
     }
-    public class LanguagePage(IWebDriver driver) : BasePage(driver)
+    public class LanguagePageLT(IWebDriver driver) : BasePage(driver)
     {
         public void SwitchTolithuanian()
         {
@@ -45,6 +47,19 @@ namespace Patterns
             actions.MoveToElement(languageSwitcher).Perform();
 
             IWebElement lang = driver.FindElement(By.LinkText("LT"));
+            lang.Click();
+        }
+    }
+
+    public class LanguagePageEN(IWebDriver driver) : BasePage(driver)
+    {
+        public void SwitchToEnglish()
+        {
+            IWebElement languageSwitcher = driver.FindElement(By.ClassName("language-switcher"));
+            Actions actions = new(driver);
+            actions.MoveToElement(languageSwitcher).Perform();
+
+            IWebElement lang = driver.FindElement(By.LinkText("EN"));
             lang.Click();
         }
     }

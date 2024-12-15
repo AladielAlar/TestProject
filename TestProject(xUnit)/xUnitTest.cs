@@ -4,18 +4,21 @@ using Patterns;
 using Patterns.WebTests.Builders;
 using FluentAssertions;
 using Serilog;
+using Xunit;
 using Xunit.Abstractions;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
+using Steps;
 
-namespace TestProject_xUnit_
+namespace TestProjectXUnit
 {
     [Collection("Parallel Tests")]
-    public class Tests : IDisposable
+    public class XUnitTest : IDisposable
     {
         private readonly IWebDriver driver;
+#pragma warning disable IDE0052 // Remove unread private members
         private readonly ITestOutputHelper output;
+#pragma warning restore IDE0052 // Remove unread private members
 
-        public Tests(ITestOutputHelper output)
+        public XUnitTest(ITestOutputHelper output)
         {
             this.output = output;
             Directory.CreateDirectory("xUnitlogs");
@@ -37,132 +40,44 @@ namespace TestProject_xUnit_
             driver.Manage().Window.Maximize();
         }
 
-        [Fact , Trait("Category", "Navigation")]
-        public void NavigationTest()
+        [Fact, Trait("Category", "xUnitTest")]
+        public void RunxUnitTest()
         {
-            Log.Debug("NavigationTest initialized.");
-            try
-            {
-                var (baseUrl, linkText, expectedUrl, expectedTitle) = TestDataFactory.NavigationTestData();
-                var basePage = new BasePage(driver);
-                var aboutPage = new AboutPage(driver);
+            Log.Information("Starting xUnit test.");
 
-                basePage.NavigateTo(baseUrl);
-                Log.Debug("Navigated to {BaseUrl}", baseUrl);
+            var feature = new UserSteps(driver);
+#pragma warning disable IDE0042 // Deconstruct variable declaration
+            var navigationData = TestDataFactory.NavigationTestData();
+            var searchData = TestDataFactory.SearchTestData();
+            var languageDataLT = TestDataFactory.LanguageTestDataLT();
+            var languageDataEN = TestDataFactory.LanguageTestDataEN();
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
+            var contactFormData = TestDataFactory.ContactFormTestData();
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
+            feature.GivenTheUserIsOnTheHomepage();
+            feature.WhenTheUserTapOn(navigationData.LinkText);
+            feature.VerifyingURL();
+            feature.WhenTheUserSwitchesTheSiteLanguageTo(languageDataLT.Language);
+            feature.ThenTheUserShouldBeRedirectedTo(languageDataLT.ExpectedUrlFragment);
+            feature.ThenThePageTitleShouldBe(languageDataLT.ExpectedHeader);
+            feature.WhenTheUserSwitchesTheSiteLanguageTo(languageDataEN.Language);
+            feature.ThenTheUserShouldBeRedirectedTo(languageDataEN.ExpectedUrlFragment);
+            feature.ThenThePageTitleShouldBe(languageDataEN.ExpectedHeader);
+            feature.WhenTheUserSearchesFor(searchData.SearchQuery);
+            feature.ThenTheUserShouldBeRedirectedToTheSearchResultsPage();
+            //feature.WhenTheUserClicksTheLink("Contact");
+            //feature.WhenTheUserFillsInTheNameEmailAndMessage(contactFormData.Name,contactFormData.Email,contactFormData.Message);
+            //feature.WhenTheUserSubmitsTheContactForm();
+            //feature.ThenTheUserShouldSeeASuccessMessageContaining(contactFormData.ExpectedMessage);
 
-                var link = basePage.FindLinkByText(linkText);
-                link.Click();
-                Log.Debug("Clicked link with text {LinkText}", linkText);
-
-                driver.Url.Should().Be(expectedUrl, "URL should match the expected value");
-                driver.Title.Should().Be(expectedTitle, "Title should match the expected value");
-
-                aboutPage.GetAboutHeader().Should().Be(expectedTitle, "Header should match the expected title");
-                Log.Information("NavigationTest passed.");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "NavigationTest failed.");
-                throw;
-            }
+            Log.Information("xUnit test completed.");
         }
 
-        [Fact ,Trait("Category", "Search")] // Category
-        public void SearchTest()
-        {
-            Log.Information("Test started.");
-            output.WriteLine("This is a direct xUnit log message.");
-            Assert.True(true);
-            try
-            {
-                var (baseUrl, searchQuery, expectedUrl) = TestDataFactory.SearchTestData();
-                var basePage = new BasePage(driver);
-                var studyProgramPage = new StudyProgramPage(driver);
-
-                basePage.NavigateTo(baseUrl);
-                Log.Debug("Navigated to {BaseUrl}", baseUrl);
-
-                studyProgramPage.SearchStudyPrograms(searchQuery);
-                Log.Debug("Searched for {SearchQuery}", searchQuery);
-
-                string currentUrl = studyProgramPage.GetCurrentUrl();
-                currentUrl.Should().Be(expectedUrl, "URL should match the expected value");
-                Log.Information("SearchTest passed.");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "SearchTest failed.");
-                throw;
-            }
-        }
-
-        [Fact, Trait("Category", "Localization")] // Category
-        public void LanguageTest()
-        {
-            Log.Debug("LanguageTest initialized.");
-            try
-            {
-                var (baseUrl, language, expectedUrlFragment, expectedHeader) = TestDataFactory.LanguageTestData();
-                var basePage = new BasePage(driver);
-                var languagePage = new LanguagePage(driver);
-
-                basePage.NavigateTo(baseUrl);
-                Log.Debug("Navigated to {BaseUrl}", baseUrl);
-
-                languagePage.SwitchTolithuanian();
-                Log.Debug("Switched to language {Language}", language);
-
-                string pageTitle = driver.FindElement(By.TagName("h2")).Text;
-                pageTitle.Should().Be(expectedHeader, "Header should match the expected value");
-                Log.Information("LanguageTest passed.");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "LanguageTest failed.");
-                throw;
-            }
-        }
-
-#pragma warning disable xUnit1004 // Test methods should not be skipped
-        [Fact(Skip = "We cannot run it, it is just an example of test with form"), Trait("Category", "ContactForm")] // Skip
-#pragma warning restore xUnit1004 // Test methods should not be skipped
-        public void ContactFormTest()
-        {
-            Log.Debug("ContactFormTest initialized.");
-            try
-            {
-                var (baseUrl, name, email, message, expectedMessage) = TestDataFactory.ContactFormTestData();
-                var basePage = new BasePage(driver);
-
-                basePage.NavigateTo(baseUrl);
-                Log.Debug("Navigated to {BaseUrl}", baseUrl);
-
-                var contactFormBuilder = new ContactFormBuilder(driver)
-                    .SetName(name)
-                    .SetEmail(email)
-                    .SetMessage(message);
-
-                contactFormBuilder.Submit();
-                Log.Debug("Submitted the contact form.");
-
-                WebDriverWait wait = new(driver, TimeSpan.FromSeconds(10));
-                var successMessage = wait.Until(d => d.FindElement(By.CssSelector(".success-message")));
-
-                successMessage.Displayed.Should().BeTrue("Success message should be displayed");
-                successMessage.Text.Should().Contain(expectedMessage, "Message should contain the expected text");
-                Log.Information("ContactFormTest passed.");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "ContactFormTest failed.");
-                throw;
-            }
-        }
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
         public void Dispose()
 #pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
         {
-            Log.Information("Tests disposed.");
+            Log.Information("Cleaning up WebDriver.");
             DriverSingleton.QuitDriver();
         }
     }
