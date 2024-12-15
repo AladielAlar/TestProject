@@ -65,10 +65,10 @@ namespace TestProjectXUnit
             feature.ThenThePageTitleShouldBe(languageDataEN.ExpectedHeader);
             feature.WhenTheUserSearchesFor(searchData.SearchQuery);
             feature.ThenTheUserShouldBeRedirectedToTheSearchResultsPage();
-            //feature.WhenTheUserClicksTheLink("Contact");
-            //feature.WhenTheUserFillsInTheNameEmailAndMessage(contactFormData.Name,contactFormData.Email,contactFormData.Message);
-            //feature.WhenTheUserSubmitsTheContactForm();
-            //feature.ThenTheUserShouldSeeASuccessMessageContaining(contactFormData.ExpectedMessage);
+          //feature.WhenTheUserClicksTheLink("Contact");
+          //feature.WhenTheUserFillsInTheNameEmailAndMessage(contactFormData.Name,contactFormData.Email,contactFormData.Message);
+          //feature.WhenTheUserSubmitsTheContactForm();
+          //feature.ThenTheUserShouldSeeASuccessMessageContaining(contactFormData.ExpectedMessage);
 
             Log.Information("xUnit test completed.");
         }
