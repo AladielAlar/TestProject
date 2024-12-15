@@ -4,7 +4,7 @@
   I want to navigate through the application, switch the language, search for study programs, and submit a contact form.
   Scenario: Complete Full Test
     Given the user is on the homepage
-    When the user tap on About
+    When the user tap on "About"
     Then the URL should be "https://en.ehu.lt/about/"
     And  the user should be redirected to the search results page
 

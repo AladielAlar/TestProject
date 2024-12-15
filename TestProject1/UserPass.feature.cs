@@ -96,7 +96,7 @@ namespace Steps
     testRunner.Given("the user is on the homepage", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
 #line 7
-    testRunner.When("the user tap on About", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+    testRunner.When("the user tap on \"About\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line hidden
 #line 8
     testRunner.Then("the URL should be \"https://en.ehu.lt/about/\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
