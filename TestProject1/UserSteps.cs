@@ -50,13 +50,18 @@ namespace Steps
             {
                 var languagePage = new LanguagePageLT(driver);
                 languagePage.SwitchTolithuanian();
+                Log.Information("Language switched to: {Language}", language);
             }
             else if(language == "EN")
             {
                 var languagePage = new LanguagePageEN(driver);
                 languagePage.SwitchToEnglish();
+                Log.Information("Language switched to: {Language}", language);
             }
-            Log.Information("Language switched to: {Language}", language);
+            else
+            {
+                Log.Information("Test failed. Language cannot switched to: {Language}", language);
+            }
         }
 
         [Then(@"the user should be redirected to ""(.*)""")]

@@ -28,6 +28,11 @@ namespace Patterns
             return ("https://lt.ehu.lt/", "EN", "en.ehu.lt", "About");
         }
 
+        public static (string BaseUrl, string Language, string ExpectedUrlFragment, string ExpectedHeader) LanguageTestDataFR()
+        {
+            return ("https://lt.ehu.lt/", "FR", "en.ehu.fr", "À propos");
+        }
+
         public static (string BaseUrl, string Name, string Email, string Message, string ExpectedMessage) ContactFormTestData()
         {
             return ("https://en.ehu.lt/contact/", "Test User", "testuser@example.com",
