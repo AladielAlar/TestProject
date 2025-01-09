@@ -6,6 +6,7 @@ using Patterns.WebTests.Builders;
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using FluentAssertions;
+using System.Reflection;
 using Serilog;
 using Steps; 
 
@@ -27,14 +28,15 @@ namespace TestProjectNUnit
             extent = new ExtentReports();
 
             // Initialize the ExtentSparkReporter (Recommended for v5.x)
+            if (File.Exists("TestReport.html"))
+            {
+                File.Delete("TestReport.html");
+            }
             var sparkReporter = new ExtentSparkReporter("TestReport.html");
             extent.AttachReporter(sparkReporter);
 
-
-
             Directory.CreateDirectory("NUnitlogs");
             string logFilePath = "NUnitlogs/tests.log";
-
             if (File.Exists(logFilePath))
             {
                 File.Delete(logFilePath);
@@ -47,11 +49,13 @@ namespace TestProjectNUnit
                 .CreateLogger();
         }
 
+
         [SetUp]
 
         public void SetUp()
         {
             Log.Information("Test started: {TestName}", TestContext.CurrentContext.Test.Name);
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
             driver.Value.Manage().Window.Maximize();
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -86,15 +90,36 @@ namespace TestProjectNUnit
         }
 
         [Test]
+        public void RunSkippedTest()
+        {
+            test = extent.CreateTest("RunSkippedTest");
+            test.Skip("Test skipped.");
+            var feature = new UserSteps(driver.Value);
+            var contactFormData = TestDataFactory.ContactFormTestData();
+            bool skip = true;
+
+            if (skip)
+            {
+                Assert.Inconclusive("skipped test");
+            }
+            feature.WhenTheUserClicksTheLink("Contact");
+            feature.WhenTheUserFillsInTheNameEmailAndMessage(contactFormData.Name, contactFormData.Email, contactFormData.Message);
+            feature.WhenTheUserSubmitsTheContactForm();
+            feature.ThenTheUserShouldSeeASuccessMessageContaining(contactFormData.ExpectedMessage);
+            Log.Information("NUnit Skipped test");
+        }
+
+        [Test]
         public void RunFailTest()
         {
+            var feature = new UserSteps(driver.Value);
 
             test = extent.CreateTest("RunFailTest");
-
-            var feature = new UserSteps(driver.Value);
             var languageDataFr = TestDataFactory.LanguageTestDataFR();
             feature.GivenTheUserIsOnTheHomepage();
             feature.WhenTheUserSwitchesTheSiteLanguageTo(languageDataFr.Language);
+            feature.ThenTheUserShouldBeRedirectedTo(languageDataFr.ExpectedUrlFragment);
+
             try
             {
                 feature.ThenTheUserShouldBeRedirectedTo(languageDataFr.ExpectedUrlFragment);
@@ -109,44 +134,13 @@ namespace TestProjectNUnit
             Log.Information("NUnit Fail test completed.");
         }
 
-        [Test, Ignore("This test is skipped.")]
-        public void RunSkippedTest()
-        {
-            test = extent.CreateTest("RunSkippedTest");
-            test.Skip("Test skipped.");
-            var feature = new UserSteps(driver.Value);
-            var contactFormData = TestDataFactory.ContactFormTestData();
-            feature.WhenTheUserClicksTheLink("Contact");
-            feature.WhenTheUserFillsInTheNameEmailAndMessage(contactFormData.Name,contactFormData.Email,contactFormData.Message);
-            feature.WhenTheUserSubmitsTheContactForm();
-            feature.ThenTheUserShouldSeeASuccessMessageContaining(contactFormData.ExpectedMessage);
-            Log.Information("NUnit Skipped test completed.");
-        }
-
         [OneTimeTearDown]
         public void TearDown()
         {
-            var resultStatus = TestContext.CurrentContext.Result.Outcome.Status;
-
-            if (resultStatus == NUnit.Framework.Interfaces.TestStatus.Skipped)
-            {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                test.Skip("This test was skipped in NUnit.");
-                Log.Information("Test marked as skipped.");
-            }
-            else if (resultStatus == NUnit.Framework.Interfaces.TestStatus.Failed)
-            {
-                test.Fail($"Test failed: {TestContext.CurrentContext.Result.Message}");
-                Log.Information("Test marked as failed.");
-            }
-            else if (resultStatus == NUnit.Framework.Interfaces.TestStatus.Passed)
-            {
-                test.Pass("Test passed successfully.");
-            }
+            extent.Flush();
             Log.Information("Cleaning up WebDriver.");
             driver.Value?.Quit();
             driver.Dispose();
-            extent.Flush();
         }
     }
 }
