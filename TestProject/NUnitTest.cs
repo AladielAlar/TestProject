@@ -26,7 +26,6 @@ namespace TestProjectNUnit
 
             extent = new ExtentReports();
 
-            // Initialize the ExtentSparkReporter (Recommended for v5.x)
             if (File.Exists("TestReport.html"))
             {
                 File.Delete("TestReport.html");
@@ -125,15 +124,20 @@ namespace TestProjectNUnit
             feature.WhenTheUserSwitchesTheSiteLanguageTo(languageDataFr.Language);
             feature.ThenTheUserShouldBeRedirectedTo(languageDataFr.ExpectedUrlFragment);
 
-            // If the assertion passes, the test will continue here, and you can log the pass
             Log.Information("NUnit Fail test completed.");
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public void TearDown()
         {
-            Log.Information("Cleaning up WebDriver.");
+            Log.Information("Cleaning up WebDriver");
             driver.Value?.Quit();
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            Log.Information("Disposing WebDriver.");
             driver.Dispose();
         }
     }
