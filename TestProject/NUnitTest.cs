@@ -18,7 +18,6 @@ namespace TestProjectNUnit
     {
         private ThreadLocal<IWebDriver> driver;
         private ExtentReports extent;
-        private ExtentTest? test;
 
         [OneTimeSetUp]
         public void SetupLogging()
@@ -67,7 +66,7 @@ namespace TestProjectNUnit
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
 #pragma warning disable IDE0042 // Deconstruct variable declaration
 #pragma warning disable CS8604 // Possible null reference argument.
-            test = extent.CreateTest("RunNUnitTest");
+            ExtentTest passedtest = extent.CreateTest("RunNUnitTest");
             var feature = new UserSteps(driver.Value);
             var navigationData = TestDataFactory.NavigationTestData();
             var searchData = TestDataFactory.SearchTestData();
@@ -85,15 +84,18 @@ namespace TestProjectNUnit
             feature.ThenThePageTitleShouldBe(languageDataEN.ExpectedHeader);
             feature.WhenTheUserSearchesFor(searchData.SearchQuery);
             feature.ThenTheUserShouldBeRedirectedToTheSearchResultsPage();
-            test.Pass("Test completed successfully.");
+            passedtest.Pass("Test completed successfully.");
+            extent.Flush();
             Log.Information("NUnit Pass test completed.");
         }
 
         [Test]
         public void RunSkippedTest()
         {
-            test = extent.CreateTest("RunSkippedTest");
-            test.Skip("Test skipped.");
+            ExtentTest skippedtest = extent.CreateTest("RunSkippedTest");
+            skippedtest.Skip("Test skipped.");
+            extent.Flush();
+
             var feature = new UserSteps(driver.Value);
             var contactFormData = TestDataFactory.ContactFormTestData();
             bool skip = true;
@@ -114,30 +116,22 @@ namespace TestProjectNUnit
         {
             var feature = new UserSteps(driver.Value);
 
-            test = extent.CreateTest("RunFailTest");
+            ExtentTest failedtest = extent.CreateTest("RunFailTest");
             var languageDataFr = TestDataFactory.LanguageTestDataFR();
             feature.GivenTheUserIsOnTheHomepage();
+            failedtest.Fail("Fail");
+            extent.Flush();
+
             feature.WhenTheUserSwitchesTheSiteLanguageTo(languageDataFr.Language);
             feature.ThenTheUserShouldBeRedirectedTo(languageDataFr.ExpectedUrlFragment);
 
-            try
-            {
-                feature.ThenTheUserShouldBeRedirectedTo(languageDataFr.ExpectedUrlFragment);
-                test.Pass("Test passed.");
-            }
-            catch (AssertionException ex)
-            {
-                test.Fail($"Test failed with message: {ex.Message}");
-                Log.Error($"Test failed: {ex.Message}");
-            }
-
+            // If the assertion passes, the test will continue here, and you can log the pass
             Log.Information("NUnit Fail test completed.");
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            extent.Flush();
             Log.Information("Cleaning up WebDriver.");
             driver.Value?.Quit();
             driver.Dispose();
