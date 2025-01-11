@@ -3,6 +3,7 @@
   <PropertyGroup>
 	<IsTestProject>true</IsTestProject>
     <TargetFramework>net8.0</TargetFramework>
+	<RootNamespace>TestProject_NUnit_</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BaseOutputPath>bin\Debug\net8.0\</BaseOutputPath>
