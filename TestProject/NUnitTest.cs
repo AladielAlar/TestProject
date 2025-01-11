@@ -23,7 +23,8 @@ namespace TestProjectNUnit
 
         private static string Screenshot(IWebDriver driver, string testName)
         {
-            string screenPath = Path.Combine($"Error Screenshot on {DateTime.Now:yyyy.MM.dd_HH-mm-ss}, {testName}.png");
+            string screenPath = Path.Combine("ERRScreenshot", $"{testName}_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+            Directory.CreateDirectory("ERRScreenshot");
             ((ITakesScreenshot)driver).GetScreenshot().SaveAsFile(screenPath);
             return screenPath;
         }
@@ -177,9 +178,8 @@ namespace TestProjectNUnit
             }
             catch (Exception ex)
             {
-                string screenshotPath = Screenshot(driver.Value, "RunFailTest");
                 failedtest.Fail($"Test fail. Issue message: {ex}")
-                    .AddScreenCaptureFromPath(screenshotPath);
+                    .AddScreenCaptureFromPath(Screenshot(driver.Value, "RunFailTest"));
                 throw;
             }
 
