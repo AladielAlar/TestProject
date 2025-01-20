@@ -14,7 +14,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Text.Json;
-using System.Drawing.Imaging;
 using System.Text;
 
 namespace APITestProject
